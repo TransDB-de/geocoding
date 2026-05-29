@@ -1,6 +1,7 @@
-# transdb-geocoding
+# Trans\*DB Geocoding Service
 
-A self-contained geocoding microservice built on ASP.NET Core and MongoDB. On first boot it downloads and imports [GeoNames](https://www.geonames.org/) data and exposes a single endpoint for forward (text/postal) and reverse (coordinate) geocoding.
+A self-contained geocoding microservice built on ASP.NET Core and MongoDB.
+On first boot it downloads and imports [GeoNames](https://www.geonames.org/) data and exposes a single endpoint for forward (text/postal) and reverse (coordinate) geocoding.
 
 Intended for machine-to-machine use.
 
@@ -12,7 +13,6 @@ Of course the more countries you add, the more performance it will eat.
 
 > **Disclaimer:** The development of this service was assisted by generative machine learning. All code was manually reviewed and verified by a skilled human dev.
 
----
 
 ## Features
 
@@ -24,7 +24,6 @@ Of course the more countries you add, the more performance it will eat.
 - **Response caching** - in-memory cache with configurable TTL; cache keys are SHA-256 hashed (coordinates and queries are never stored in plain text)
 - **Readiness endpoint** - reports startup/import progress for Docker health checks
 
----
 
 ## API
 
@@ -40,7 +39,6 @@ Requests without a valid key return `401 Unauthorized`.
 
 API keys are loaded from files — see [API Keys](#api-keys) below.
 
----
 
 ### `GET /geocode`
 
@@ -83,7 +81,6 @@ curl -H "X-Api-Key: your-key" "http://localhost:8080/geocode?q=10115&country=DE"
 curl -H "X-Api-Key: your-key" "http://localhost:8080/geocode?lat=53.55&lon=10.00&country=DE"
 ```
 
----
 
 ### `GET /health`
 
@@ -100,7 +97,6 @@ No authentication required. Used for Docker/Kubernetes liveness and readiness pr
 | `ready`      | 200  | Fully operational                    |
 | `failed`     | 503  | Import failed; queries return empty  |
 
----
 
 ## Configuration
 
@@ -142,7 +138,6 @@ All settings can be overridden via environment variables using `__` as the separ
 | `Cache__Ttl`                | Cache TTL as TimeSpan string, e.g. `00:30:00`      |
 | `GeoData__DataDirectory`    | Path where downloaded zip files are stored         |
 
----
 
 ## API Keys
 
@@ -163,7 +158,6 @@ mkdir -p keys
 echo "my-dev-key" > keys/dev.key
 ```
 
----
 
 ## Running with Docker
 
@@ -218,7 +212,6 @@ volumes:
 
 > **Note:** The initial import can take several minutes per country depending on hardware. The `start_period` in the health check should account for this. Downloaded files are cached in `DataDirectory` and the import is skipped on subsequent starts.
 
----
 
 ## Adding countries
 
@@ -229,17 +222,3 @@ Add the ISO 3166-1 alpha-2 country code to the `GeoData.Countries` array in `app
 ```
 
 The download URLs are derived automatically from the `PlacesUrl` and `PostalCodesUrl` templates — no further changes needed. On next boot the service will import the new country while leaving existing data untouched.
-
----
-
-## MongoDB
-
-### Indexes
-
-The service creates the following indexes automatically on startup:
-
-| Name                  | Fields                          | Purpose                                 |
-|-----------------------|---------------------------------|-----------------------------------------|
-| `location_2dsphere`   | `location` (2dsphere)           | Coordinate / `$near` queries            |
-| `text_search`         | `name`, `asciiName`, `alternateNames` (text) | Full-text search             |
-| `country_postal_codes`| `countryCode` + `postalCodes`   | Country filter + postal code lookup     |
