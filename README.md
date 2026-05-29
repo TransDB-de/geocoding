@@ -1,9 +1,10 @@
-# Trans\*DB Geocoding Service
+# 🗺️ Trans\*DB Geocoding Service
 
-A self-contained geocoding microservice built on ASP.NET Core and MongoDB.
+A self-contained open source geocoding microservice built on ASP.NET Core and MongoDB.
+
+Intended for machine-to-machine use, especially useful for building a data search function based on distances.
+
 On first boot it downloads and imports [GeoNames](https://www.geonames.org/) data and exposes a single endpoint for forward (text/postal) and reverse (coordinate) geocoding.
-
-Intended for machine-to-machine use.
 
 The service is quite performant with response times in sometimes under 100ms and only minor ram usage in the two digit megabyte range.
 Accuracy is not down to actual addresses, but villages/city-districts.
