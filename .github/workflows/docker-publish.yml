@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: transdb-geocoding
+  IMAGE_NAME: geocoding
 
 jobs:
   build-and-push:
