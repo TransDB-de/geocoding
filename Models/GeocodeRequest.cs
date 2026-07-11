@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Options;
 
 namespace transdb_geocoding.Models;
 
@@ -25,12 +26,12 @@ public class GeocodeRequest : IValidatableObject
 
     /// <summary>ISO 3166-1 alpha-2 country code. Defaults to "DE".</summary>
     [StringLength(2)]
-    public string Country { get; set; } = "DE";
+    public string? Country { get; set; } = null;
     
     public bool HasCoordinates => Lat.HasValue && Lon.HasValue;
     public bool HasTextQuery => !string.IsNullOrWhiteSpace(Q);
     
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    public IEnumerable<ValidationResult> Validate(ValidationContext ctx)
     {
         // lat and lon must be supplied as a pair
         if (Lat.HasValue != Lon.HasValue)
@@ -43,6 +44,15 @@ public class GeocodeRequest : IValidatableObject
             yield return new ValidationResult(
                 "Provide either 'q' (text query) or both 'lat' and 'lon' (coordinates).",
                 [nameof(Q), nameof(Lat), nameof(Lon)]);
+
+        var options = ctx.GetService(typeof(IOptionsSnapshot<GeoDataSettings>))
+            as IOptionsSnapshot<GeoDataSettings>;
+        
+        if (Country != null && !options.Value.Countries.Contains(Country))
+        {
+            yield return new ValidationResult(
+                "Requested country not available", [nameof(Country)]);
+        }
     }
     
     /// <summary>
@@ -51,9 +61,11 @@ public class GeocodeRequest : IValidatableObject
     /// </summary>
     public string GetCacheKey()
     {
+        var country = !string.IsNullOrWhiteSpace(this.Country) ? this.Country.ToUpperInvariant() : string.Empty;
+        
         var fingerprint = string.Create(
             System.Globalization.CultureInfo.InvariantCulture,
-            $"{this.Q?.Trim().ToLowerInvariant()}|{this.Lat:F6}|{this.Lon:F6}|{this.Country.ToUpperInvariant()}");
+            $"{this.Q?.Trim().ToLowerInvariant()}|{this.Lat:F6}|{this.Lon:F6}|{country}");
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint));
         return Convert.ToHexString(hash);

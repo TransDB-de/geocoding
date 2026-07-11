@@ -49,13 +49,17 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
     {
         var point = GeoJson.Point(GeoJson.Geographic(request.Lon!.Value, request.Lat!.Value));
 
-        var filter = Builders<LocationDocument>.Filter.And(
-            Builders<LocationDocument>.Filter.Eq(l => l.CountryCode, request.Country),
-            Builders<LocationDocument>.Filter.Near(l => l.Location, point, maxDistance: null, minDistance: null)
-        );
+        var filters = new List<FilterDefinition<LocationDocument>>();
+
+        if (request.Country != null)
+        {
+            filters.Add(Builders<LocationDocument>.Filter.Eq(l => l.CountryCode, request.Country));
+        }
+        
+        filters.Add(Builders<LocationDocument>.Filter.Near(l => l.Location, point, maxDistance: null, minDistance: null));
 
         var docs = await db.Locations
-            .Find(filter)
+            .Find(Builders<LocationDocument>.Filter.And(filters))
             .Limit(MaxResults)
             .ToListAsync(ct);
 
@@ -83,18 +87,23 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
     {
         // Uppercase so "1234 ab" matches stored "1234 AB" (NL)
         var postal = postalCode.ToUpperInvariant();
+        
+        var filters = new List<FilterDefinition<LocationDocument>>();
 
-        var filter = Builders<LocationDocument>.Filter.And(
-            Builders<LocationDocument>.Filter.Eq(l => l.CountryCode, request.Country),
-            Builders<LocationDocument>.Filter.AnyEq(l => l.PostalCodes, postal)
-        );
+        if (request.Country != null)
+        {
+            filters.Add(Builders<LocationDocument>.Filter.Eq(l => l.CountryCode, request.Country));
+        }
+        
+        filters.Add(Builders<LocationDocument>.Filter.AnyEq(l => l.PostalCodes, postal));
+        
 
         // Fetch extra candidates when a name hint is present so the matching place
         // is not cut off before re-ranking (mirrors the text-search approach).
         var limit = string.IsNullOrWhiteSpace(nameHint) ? MaxResults : MaxResults * 5;
 
         var docs = await db.Locations
-            .Find(filter)
+            .Find(Builders<LocationDocument>.Filter.And(filters))
             .SortByDescending(l => l.Population)
             .Limit(limit)
             .ToListAsync(ct);
@@ -125,11 +134,15 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
         GeocodeRequest request, CancellationToken ct)
     {
         var q = request.Q!.Trim();
+        
+        var filters = new List<FilterDefinition<LocationDocument>>();
 
-        var filter = Builders<LocationDocument>.Filter.And(
-            Builders<LocationDocument>.Filter.Eq(l => l.CountryCode, request.Country),
-            Builders<LocationDocument>.Filter.Text(q, new TextSearchOptions { CaseSensitive = false })
-        );
+        if (request.Country != null)
+        {
+            filters.Add(Builders<LocationDocument>.Filter.Eq(l => l.CountryCode, request.Country));
+        }
+        
+        filters.Add(Builders<LocationDocument>.Filter.Text(q, new TextSearchOptions { CaseSensitive = false }));
 
         var projection = Builders<LocationDocument>.Projection
             .MetaTextScore("TextScore")
@@ -143,7 +156,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
         // Fetch more candidates than needed so the exact-match promotion has room to work.
         // Sort must be applied before Project in the fluent API (MongoDB.Driver 3.x).
         var rawDocs = await db.Locations
-            .Find(filter)
+            .Find(Builders<LocationDocument>.Filter.And(filters))
             .Sort(Builders<LocationDocument>.Sort.MetaTextScore("TextScore"))
             .Limit(MaxResults * 5)
             .Project<TextSearchResultProjection>(projection)

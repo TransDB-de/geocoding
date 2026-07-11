@@ -26,7 +26,11 @@ public class GeocodeController(IGeocodeService geocodeService, IMemoryCache cach
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get([FromQuery] GeocodeRequest request, CancellationToken ct = default)
     {
-        request.Country = request.Country.ToUpperInvariant();
+
+        if (!string.IsNullOrEmpty(request.Country))
+        {
+            request.Country = request.Country.ToUpperInvariant();
+        }
         
         var cachedData = cache.Get<List<GeocodeResult>>(request.GetCacheKey());
 
