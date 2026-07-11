@@ -137,6 +137,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
             .Include(l => l.AsciiName)
             .Include(l => l.CountryCode)
             .Include(l => l.Location)
+            .Include(l => l.Population)
             .Exclude("_id");
 
         // Fetch more candidates than needed so the exact-match promotion has room to work.
@@ -155,6 +156,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
             .OrderByDescending(doc =>
                 string.Equals(doc.Name, q, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(doc.AsciiName, q, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(doc => doc.Population)
             .Take(MaxResults)
             .Select(doc => new GeocodeResult
             {
@@ -171,6 +173,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
         public string AsciiName { get; set; } = string.Empty;
         public string CountryCode { get; set; } = string.Empty;
         public GeoJsonPoint<GeoJson2DGeographicCoordinates> Location { get; set; } = null!;
-        public double TextScore { get; set; }
+        public double TextScore { get; set; } = -1;
+        public long Population { get; set; } = -1;
     }
 }
