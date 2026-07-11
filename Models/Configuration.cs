@@ -11,6 +11,11 @@ public class ApiKeySettings
     public string Directory { get; set; } = "/app/keys";
 }
 
+public class ApiLimitationSettings
+{
+    public int MaxLocationLimit { get; set; } = 3;
+}
+
 public class CacheSettings
 {
     public TimeSpan Ttl { get; set; } = TimeSpan.FromHours(1);

@@ -18,6 +18,9 @@ builder.Services.Configure<CacheSettings>(
 builder.Services.Configure<ApiKeySettings>(
     builder.Configuration.GetSection("ApiKeys"));
 
+builder.Services.Configure<ApiLimitationSettings>(
+    builder.Configuration.GetSection("ApiLimitation"));
+
 // ── Infrastructure ───────────────────────────────────────────────────────────
 builder.Services.AddSingleton<DatabaseService>();
 builder.Services.AddSingleton<ApiKeyService>();

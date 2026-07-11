@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +14,7 @@ namespace transdb_geocoding.Controllers;
 [Route("[controller]")]
 [Authorize]
 public class GeocodeController(IGeocodeService geocodeService, IMemoryCache cache,
-    IOptions<CacheSettings> cacheSettings) : ControllerBase
+    IOptions<CacheSettings> cacheSettings, IOptions<ApiLimitationSettings> limitSettings) : ControllerBase
 {
     /// <summary>
     /// Geocoding lookup. Supply either a text query (<paramref name="request.Q"/>) or
@@ -26,6 +27,14 @@ public class GeocodeController(IGeocodeService geocodeService, IMemoryCache cach
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Get([FromQuery] GeocodeRequest request, CancellationToken ct = default)
     {
+        if (request.Limit > limitSettings.Value.MaxLocationLimit)
+        {
+            ModelState.AddModelError(
+                nameof(request.Limit),
+                "Maximum allowed limit is " + limitSettings.Value.MaxLocationLimit);
+
+            return ValidationProblem(ModelState);
+        }
 
         if (!string.IsNullOrEmpty(request.Country))
         {

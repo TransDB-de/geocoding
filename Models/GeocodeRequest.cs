@@ -27,6 +27,8 @@ public class GeocodeRequest : IValidatableObject
     /// <summary>ISO 3166-1 alpha-2 country code. Defaults to "DE".</summary>
     [StringLength(2)]
     public string? Country { get; set; } = null;
+
+    public int Limit { get; set; } = 3;
     
     public bool HasCoordinates => Lat.HasValue && Lon.HasValue;
     public bool HasTextQuery => !string.IsNullOrWhiteSpace(Q);
