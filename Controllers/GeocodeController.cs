@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -11,21 +8,31 @@ using transdb_geocoding.Services;
 namespace transdb_geocoding.Controllers;
 
 [ApiController]
-[Route("[controller]")]
 [Authorize]
 public class GeocodeController(IGeocodeService geocodeService, IMemoryCache cache,
-    IOptions<CacheSettings> cacheSettings, IOptions<ApiLimitationSettings> limitSettings) : ControllerBase
+    IOptions<CacheSettings> cacheSettings, IOptions<ApiLimitationSettings> limitSettings, IOptions<GeoDataSettings> geodataSettings) : ControllerBase
 {
+    /// <summary>
+    /// Get all countries available for geocoding
+    /// </summary>
+    /// <returns>object containing list of country codes</returns>
+    [HttpGet("countries")]
+    [ProducesResponseType<GetAvailableCountriesResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<GetAvailableCountriesResult>> GetAvailableCountries()
+    {
+        return Ok(new GetAvailableCountriesResult(geodataSettings.Value.Countries));
+    }
+    
     /// <summary>
     /// Geocoding lookup. Supply either a text query (<paramref name="request.Q"/>) or
     /// coordinates (<paramref name="request.Lat"/> + <paramref name="request.Lon"/>).
     /// Coordinates take precedence when both are provided.
     /// </summary>
     /// <returns>Up to 3 matching locations, sorted by match quality descending.</returns>
-    [HttpGet]
+    [HttpGet("geocode")]
     [ProducesResponseType<List<GeocodeResult>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Get([FromQuery] GeocodeRequest request, CancellationToken ct = default)
+    public async Task<ActionResult<List<GeocodeResult>>> Geocode([FromQuery] GeocodeRequest request, CancellationToken ct = default)
     {
         if (request.Limit > limitSettings.Value.MaxLocationLimit)
         {

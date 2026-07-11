@@ -26,3 +26,9 @@ public class GeocodeResult
     /// </summary>
     public GeoJsonPoint Location { get; set; } = null!;
 }
+
+/// <summary>
+/// Object wrapper for available countries list
+/// </summary>
+/// <param name="Countries">list of iso country codes</param>
+public record GetAvailableCountriesResult(List<string> Countries);

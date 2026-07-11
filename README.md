@@ -40,8 +40,19 @@ Requests without a valid key return `401 Unauthorized`.
 
 API keys are loaded from files — see [API Keys](#api-keys) below.
 
+### `GET /countries`
+Get all for this geocoding service available countries
+
+**Response** - Object containing a list of iso country codes
+
+```json
+{
+  "countries": ["DE", "AT", "BE", "NL"]
+}
+```
 
 ### `GET /geocode`
+The main geocoding and reverse geocoding endpoint
 
 | Parameter | Type     | Required | Description                                          |
 |-----------|----------|----------|------------------------------------------------------|
@@ -52,7 +63,7 @@ API keys are loaded from files — see [API Keys](#api-keys) below.
 
 Either `q` or `lat`+`lon` must be provided. When both are given, coordinates take precedence.
 
-**Response** — up to 3 results, ordered by relevance:
+**Response** - up to 3 results, ordered by relevance:
 
 ```json
 [

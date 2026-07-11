@@ -5,7 +5,7 @@ using transdb_geocoding.Services;
 namespace transdb_geocoding.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("health")]
 [AllowAnonymous]
 public class HealthController(DatabaseService db, ReadinessService readiness) : ControllerBase
 {
