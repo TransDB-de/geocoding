@@ -59,7 +59,8 @@ The main geocoding and reverse geocoding endpoint
 | `q`       | `string` | either/or| City name, district, or postal code                  |
 | `lat`     | `double` | either/or| Latitude in decimal degrees (WGS84), paired with `lon` |
 | `lon`     | `double` | either/or| Longitude in decimal degrees (WGS84), paired with `lat`|
-| `country` | `string` | no       | ISO 3166-1 alpha-2 country code. Default: `DE`       |
+| `country` | `string` | no       | ISO 3166-1 alpha-2 country code.                     |
+| `limit`   | `int`    | no       | How many results to return                           |
 
 Either `q` or `lat`+`lon` must be provided. When both are given, coordinates take precedence.
 
@@ -136,6 +137,10 @@ All settings can be overridden via environment variables using `__` as the separ
     "PlacesUrl": "https://download.geonames.org/export/dump/{code}.zip",
     "PostalCodesUrl": "https://download.geonames.org/export/zip/{code}.zip",
     "Countries": [ "DE", "AT", "CH" ]
+  },
+
+  "ApiLimitation": {
+    "MaxLocationLimit": 30
   }
 }
 ```
