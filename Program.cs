@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using transdb_geocoding.Authentication;
 using transdb_geocoding.Models;
 using transdb_geocoding.Services;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,7 @@ app.Services.GetRequiredService<ApiKeyService>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
