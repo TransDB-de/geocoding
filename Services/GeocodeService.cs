@@ -13,8 +13,6 @@ public interface IGeocodeService
 }
 
 public class GeocodeService(DatabaseService db) : IGeocodeService {
-    private const int MaxResults = 3;
-
     public async Task<List<GeocodeResult>> SearchAsync(GeocodeRequest request, CancellationToken ct = default)
     {
         List<GeocodeResult> results;
@@ -60,7 +58,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
 
         var docs = await db.Locations
             .Find(Builders<LocationDocument>.Filter.And(filters))
-            .Limit(MaxResults)
+            .Limit(request.Limit)
             .ToListAsync(ct);
 
         return docs.Select(doc => new GeocodeResult
@@ -100,7 +98,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
 
         // Fetch extra candidates when a name hint is present so the matching place
         // is not cut off before re-ranking (mirrors the text-search approach).
-        var limit = string.IsNullOrWhiteSpace(nameHint) ? MaxResults : MaxResults * 5;
+        var limit = string.IsNullOrWhiteSpace(nameHint) ? request.Limit : request.Limit * 5;
 
         var docs = await db.Locations
             .Find(Builders<LocationDocument>.Filter.And(filters))
@@ -116,7 +114,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
                 string.Equals(doc.Name, nameHint, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(doc.AsciiName, nameHint, StringComparison.OrdinalIgnoreCase));
 
-        return ranked.Take(MaxResults).Select(doc => new GeocodeResult
+        return ranked.Take(request.Limit).Select(doc => new GeocodeResult
         {
             Name = doc.Name,
             CountryCode = doc.CountryCode,
@@ -158,7 +156,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
         var rawDocs = await db.Locations
             .Find(Builders<LocationDocument>.Filter.And(filters))
             .Sort(Builders<LocationDocument>.Sort.MetaTextScore("TextScore"))
-            .Limit(MaxResults * 5)
+            .Limit(request.Limit * 5)
             .Project<TextSearchResultProjection>(projection)
             .ToListAsync(ct);
 
@@ -170,7 +168,7 @@ public class GeocodeService(DatabaseService db) : IGeocodeService {
                 string.Equals(doc.Name, q, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(doc.AsciiName, q, StringComparison.OrdinalIgnoreCase))
             .ThenByDescending(doc => doc.Population)
-            .Take(MaxResults)
+            .Take(request.Limit)
             .Select(doc => new GeocodeResult
             {
                 Name = doc.Name,

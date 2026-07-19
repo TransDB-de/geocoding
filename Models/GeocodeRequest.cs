@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
 namespace transdb_geocoding.Models;
@@ -30,7 +31,9 @@ public class GeocodeRequest : IValidatableObject
 
     public int Limit { get; set; } = 3;
     
+    [JsonIgnore]
     public bool HasCoordinates => Lat.HasValue && Lon.HasValue;
+    [JsonIgnore]
     public bool HasTextQuery => !string.IsNullOrWhiteSpace(Q);
     
     public IEnumerable<ValidationResult> Validate(ValidationContext ctx)
